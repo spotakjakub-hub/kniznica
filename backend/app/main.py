@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db, SessionLocal
-from app.routers import books, categories, meta
+from app.routers import books, categories, meta, scan
 from app.routers.categories import seed_categories
 
 
@@ -34,6 +34,7 @@ app.add_middleware(
 app.include_router(books.router)
 app.include_router(categories.router)
 app.include_router(meta.router)
+app.include_router(scan.router)
 
 
 @app.get("/api/health")

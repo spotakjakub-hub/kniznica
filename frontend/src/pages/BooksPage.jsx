@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { booksApi, categoriesApi, metaApi } from '../api'
 import BookFormModal from '../components/BookFormModal'
+import ScanModal from '../components/ScanModal'
 import toast from 'react-hot-toast'
 import { STATUS_LABEL, STATUS_BADGE, LANGUAGES, langLabel, authorNames } from '../constants'
 
@@ -21,6 +22,8 @@ export default function BooksPage() {
   const [locFilter, setLocFilter] = useState('')
   const [page, setPage] = useState(0)
   const [showForm, setShowForm] = useState(false)
+  const [showScan, setShowScan] = useState(false)
+  const [prefill, setPrefill] = useState(null)
   const nav = useNavigate()
   const debounceRef = useRef(null)
   const [debouncedQ, setDebouncedQ] = useState('')
@@ -73,7 +76,10 @@ export default function BooksPage() {
             onChange={e => setQ(e.target.value)}
           />
         </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+        <button className="btn btn-secondary" onClick={() => setShowScan(true)}>
+          📷 Scan
+        </button>
+        <button className="btn btn-primary" onClick={() => { setPrefill(null); setShowForm(true) }}>
           + Add book
         </button>
       </div>
@@ -147,8 +153,15 @@ export default function BooksPage() {
         </>
       )}
 
+      {showScan && (
+        <ScanModal
+          onClose={() => setShowScan(false)}
+          onDone={(p) => { setShowScan(false); setPrefill(p); setShowForm(true) }}
+        />
+      )}
       {showForm && (
         <BookFormModal
+          prefill={prefill}
           categories={categories}
           locations={locations}
           onClose={() => setShowForm(false)}

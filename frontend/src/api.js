@@ -18,6 +18,17 @@ export const categoriesApi = {
   create: (data) => api.post('/categories/', data),
 }
 
+export const scanApi = {
+  identify: (coverFile, extraFile) => {
+    const fd = new FormData()
+    fd.append('cover', coverFile)
+    if (extraFile) fd.append('extra', extraFile)
+    return api.post('/scan/identify', fd, { timeout: 120000 })
+  },
+  isbn: (isbn) => api.get(`/scan/isbn/${encodeURIComponent(isbn)}`),
+  search: (title, author) => api.get('/scan/search', { params: { title, author: author || undefined } }),
+}
+
 export const metaApi = {
   locations: () => api.get('/meta/locations'),
   languages: () => api.get('/meta/languages'),

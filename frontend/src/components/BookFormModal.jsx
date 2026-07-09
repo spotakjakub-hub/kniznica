@@ -32,19 +32,22 @@ function toPayload(form, authors, tagsText) {
   }
 }
 
-export default function BookFormModal({ book, categories, locations = [], onClose, onSaved }) {
+export default function BookFormModal({ book, prefill, categories, locations = [], onClose, onSaved }) {
+  const src = book || prefill
   const [form, setForm] = useState(() => {
-    if (!book) return EMPTY
+    if (!src) return EMPTY
     const f = { ...EMPTY }
     for (const k of Object.keys(EMPTY)) {
-      if (book[k] !== null && book[k] !== undefined) f[k] = String(book[k])
+      if (src[k] !== null && src[k] !== undefined) f[k] = String(src[k])
     }
-    f.language = book.language || 'en'
-    f.status = book.status || 'available'
+    f.language = src.language || 'en'
+    f.status = src.status || 'available'
     return f
   })
   const [authors, setAuthors] = useState(
-    book?.authors?.length ? book.authors.map(a => ({ name: a.name, role: a.role })) : [{ name: '', role: 'author' }]
+    src?.authors?.length
+      ? src.authors.map(a => ({ name: a.name, role: a.role || 'author' }))
+      : [{ name: '', role: 'author' }]
   )
   const [tagsText, setTagsText] = useState(book?.tags?.map(t => t.name).join(', ') || '')
   const [newCategory, setNewCategory] = useState(null) // null = off, string = name being typed
@@ -60,6 +63,7 @@ export default function BookFormModal({ book, categories, locations = [], onClos
     setSaving(true)
     try {
       const payload = toPayload({ ...form, title: form.title.trim() }, authors, tagsText)
+      if (!book && prefill?.ai_confidence != null) payload.ai_confidence = prefill.ai_confidence
       if (newCategory !== null && newCategory.trim()) {
         const { data } = await categoriesApi.create({ name: newCategory.trim() })
         payload.category_id = data.id
@@ -83,6 +87,19 @@ export default function BookFormModal({ book, categories, locations = [], onClos
             <button type="button" className="btn btn-ghost" onClick={onClose}>✕</button>
           </div>
           <div className="modal-body">
+            {!book && prefill && (
+              <div className="ocr-result" style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
+                {form.cover_image_url && (
+                  <img src={form.cover_image_url} alt=""
+                    style={{ width: 44, height: 66, objectFit: 'cover', borderRadius: 4 }} />
+                )}
+                <span>
+                  ✨ Pre-filled automatically
+                  {prefill.ai_confidence != null && <> — AI confidence <strong>{Math.round(prefill.ai_confidence * 100)} %</strong></>}
+                  . Please check before saving.
+                </span>
+              </div>
+            )}
             <div className="form-group">
               <label>Title *</label>
               <input className="form-control" value={form.title} onChange={set('title')} autoFocus required />

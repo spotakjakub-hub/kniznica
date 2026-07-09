@@ -59,8 +59,14 @@ Runs at http://localhost:5173; `/api` is proxied to the backend (port 8000).
 
 Collection endpoints must be called with a trailing slash (`/api/books/`), otherwise FastAPI returns a 307 redirect.
 
+## AI identification (Phase 2)
+
+- `POST /api/scan/identify` — cover photo (+ optional title page) -> Gemini vision -> merged with Open Library/Google Books; the photo is stored in Supabase Storage (public bucket `covers`)
+- `GET /api/scan/isbn/{isbn}` — metadata lookup by ISBN
+- `GET /api/scan/search?title=&author=` — candidate search
+- Backend env: `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, optional `GEMINI_MODEL` (falls back through gemini-3.5-flash -> flash-latest -> 3.1-flash-lite -> 2.0-flash)
+
 ## Next phases
 
-2. AI identification from a cover photo (Gemini) + Open Library/Google Books lookup
 3. Batch mode with a background queue
 4. CSV export, statistics, lending, auth
