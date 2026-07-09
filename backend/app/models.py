@@ -47,7 +47,7 @@ class Book(Base):
     isbn13 = Column(String(20), index=True)
     publisher = Column(String(200))
     published_year = Column(Integer)
-    language = Column(String(10), default="sk")
+    language = Column(String(10), default="en")
     pages = Column(Integer)
     edition = Column(String(100))
     description = Column(Text)

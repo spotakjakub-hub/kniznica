@@ -8,10 +8,26 @@ from app.schemas import CategoryBase, CategoryOut
 
 router = APIRouter(prefix="/api/categories", tags=["categories"])
 
+# Subject categories for a Mesoamerican studies research library
 DEFAULT_CATEGORIES = [
-    "Fiction", "Poetry", "Crime & Mystery", "Sci-fi & Fantasy", "History",
-    "Biographies", "Travel", "Non-fiction", "Art", "Religion",
-    "Children's books", "Dictionaries & Encyclopedias", "Textbooks", "Other",
+    "Archaeology",
+    "Anthropology & Ethnography",
+    "Ethnohistory",
+    "Maya Studies",
+    "Aztec & Nahua Studies",
+    "Other Mesoamerican Cultures",
+    "Epigraphy & Writing Systems",
+    "Codices & Manuscripts",
+    "Linguistics",
+    "Art & Iconography",
+    "Religion, Myth & Cosmology",
+    "Conquest & Colonial History",
+    "Excavation & Field Reports",
+    "Museum & Exhibition Catalogs",
+    "Travel Accounts & Exploration",
+    "Reference & Dictionaries",
+    "Journals & Periodicals",
+    "General & Other",
 ]
 
 

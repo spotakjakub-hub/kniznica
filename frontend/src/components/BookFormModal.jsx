@@ -5,7 +5,7 @@ import { STATUS_LABEL, ROLE_LABEL, LANGUAGES, CONDITIONS, CONDITION_LABEL } from
 
 const EMPTY = {
   title: '', subtitle: '', isbn: '', isbn13: '', publisher: '',
-  published_year: '', language: 'sk', pages: '', edition: '',
+  published_year: '', language: 'en', pages: '', edition: '',
   description: '', notes: '', cover_image_url: '', location: '',
   condition: '', status: 'available', category_id: '',
 }
@@ -38,7 +38,7 @@ export default function BookFormModal({ book, categories, locations = [], onClos
     for (const k of Object.keys(EMPTY)) {
       if (book[k] !== null && book[k] !== undefined) f[k] = String(book[k])
     }
-    f.language = book.language || 'sk'
+    f.language = book.language || 'en'
     f.status = book.status || 'available'
     return f
   })

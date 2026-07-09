@@ -36,7 +36,7 @@ class BookBase(BaseModel):
     isbn13: Optional[str] = None
     publisher: Optional[str] = None
     published_year: Optional[int] = None
-    language: Optional[str] = "sk"
+    language: Optional[str] = "en"
     pages: Optional[int] = None
     edition: Optional[str] = None
     description: Optional[str] = None

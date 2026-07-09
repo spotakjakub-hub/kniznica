@@ -2,14 +2,17 @@ export const STATUS_LABEL = { available: 'Available', missing: 'Missing', damage
 export const STATUS_BADGE = { available: 'badge-available', missing: 'badge-missing', damaged: 'badge-damaged' }
 export const ROLE_LABEL = { author: 'Author', editor: 'Editor', translator: 'Translator' }
 export const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Spanish' },
   { code: 'sk', label: 'Slovak' },
   { code: 'cs', label: 'Czech' },
-  { code: 'en', label: 'English' },
   { code: 'de', label: 'German' },
+  { code: 'fr', label: 'French' },
+  { code: 'nah', label: 'Nahuatl' },
+  { code: 'myn', label: 'Mayan languages' },
   { code: 'hu', label: 'Hungarian' },
   { code: 'ru', label: 'Russian' },
   { code: 'pl', label: 'Polish' },
-  { code: 'fr', label: 'French' },
   { code: 'la', label: 'Latin' },
 ]
 export const LANGUAGE_LABEL = Object.fromEntries(LANGUAGES.map(l => [l.code, l.label]))
