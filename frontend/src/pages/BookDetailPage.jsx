@@ -27,11 +27,13 @@ export default function BookDetailPage() {
     }
   }, [id, nav])
 
-  useEffect(() => { load() }, [load])
-  useEffect(() => {
+  const loadMeta = useCallback(() => {
     categoriesApi.list().then(({ data }) => setCategories(data)).catch(() => {})
     metaApi.locations().then(({ data }) => setLocations(data)).catch(() => {})
   }, [])
+
+  useEffect(() => { load() }, [load])
+  useEffect(() => { loadMeta() }, [loadMeta])
 
   const remove = async () => {
     if (!window.confirm(`Really delete “${book.title}”?`)) return
@@ -128,7 +130,7 @@ export default function BookDetailPage() {
           categories={categories}
           locations={locations}
           onClose={() => setEditing(false)}
-          onSaved={() => { setEditing(false); load(); toast.success('Changes saved!') }}
+          onSaved={() => { setEditing(false); load(); loadMeta(); toast.success('Changes saved!') }}
         />
       )}
     </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { booksApi } from '../api'
+import { booksApi, categoriesApi } from '../api'
 import toast from 'react-hot-toast'
 import { STATUS_LABEL, ROLE_LABEL, LANGUAGES, CONDITIONS, CONDITION_LABEL } from '../constants'
 
@@ -46,6 +46,7 @@ export default function BookFormModal({ book, categories, locations = [], onClos
     book?.authors?.length ? book.authors.map(a => ({ name: a.name, role: a.role })) : [{ name: '', role: 'author' }]
   )
   const [tagsText, setTagsText] = useState(book?.tags?.map(t => t.name).join(', ') || '')
+  const [newCategory, setNewCategory] = useState(null) // null = off, string = name being typed
   const [saving, setSaving] = useState(false)
 
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -58,6 +59,10 @@ export default function BookFormModal({ book, categories, locations = [], onClos
     setSaving(true)
     try {
       const payload = toPayload({ ...form, title: form.title.trim() }, authors, tagsText)
+      if (newCategory !== null && newCategory.trim()) {
+        const { data } = await categoriesApi.create({ name: newCategory.trim() })
+        payload.category_id = data.id
+      }
       if (book) await booksApi.update(book.id, payload)
       else await booksApi.create(payload)
       onSaved()
@@ -141,10 +146,24 @@ export default function BookFormModal({ book, categories, locations = [], onClos
               </div>
               <div className="form-group">
                 <label>Category</label>
-                <select className="form-control" value={form.category_id} onChange={set('category_id')}>
-                  <option value="">— no category —</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                {newCategory === null ? (
+                  <select className="form-control" value={form.category_id}
+                    onChange={e => {
+                      if (e.target.value === '__new__') setNewCategory('')
+                      else set('category_id')(e)
+                    }}>
+                    <option value="">— no category —</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    <option value="__new__">＋ New category…</option>
+                  </select>
+                ) : (
+                  <div className="author-row" style={{ marginBottom: 0 }}>
+                    <input className="form-control" placeholder="New category name" autoFocus
+                      value={newCategory} onChange={e => setNewCategory(e.target.value)} />
+                    <button type="button" className="remove-btn" title="Cancel"
+                      onClick={() => setNewCategory(null)}>✕</button>
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label>Location</label>
