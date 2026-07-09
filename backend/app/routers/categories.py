@@ -9,9 +9,9 @@ from app.schemas import CategoryBase, CategoryOut
 router = APIRouter(prefix="/api/categories", tags=["categories"])
 
 DEFAULT_CATEGORIES = [
-    "Beletria", "Poézia", "Detektívky", "Sci-fi a fantasy", "História",
-    "Životopisy", "Cestopisy", "Náučná literatúra", "Umenie", "Náboženstvo",
-    "Detské knihy", "Slovníky a encyklopédie", "Učebnice", "Iné",
+    "Fiction", "Poetry", "Crime & Mystery", "Sci-fi & Fantasy", "History",
+    "Biographies", "Travel", "Non-fiction", "Art", "Religion",
+    "Children's books", "Dictionaries & Encyclopedias", "Textbooks", "Other",
 ]
 
 
@@ -31,7 +31,7 @@ def list_categories(db: Session = Depends(get_db)):
 def create_category(payload: CategoryBase, db: Session = Depends(get_db)):
     name = payload.name.strip()
     if not name:
-        raise HTTPException(422, "Názov kategórie je povinný")
+        raise HTTPException(422, "Category name is required")
     existing = db.query(Category).filter(func.lower(Category.name) == name.lower()).first()
     if existing:
         return existing
@@ -46,7 +46,7 @@ def create_category(payload: CategoryBase, db: Session = Depends(get_db)):
 def delete_category(category_id: int, db: Session = Depends(get_db)):
     cat = db.query(Category).filter(Category.id == category_id).first()
     if not cat:
-        raise HTTPException(404, "Kategória nenájdená")
+        raise HTTPException(404, "Category not found")
     db.query(Book).filter(Book.category_id == category_id).update({"category_id": None})
     db.delete(cat)
     db.commit()

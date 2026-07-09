@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Rodinná knižnica API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Family Library API", version="0.1.0", lifespan=lifespan)
 
 # Comma-separated list of allowed origins, e.g. "https://kniznica.vercel.app,http://localhost:5173"
 origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(",") if o.strip()]

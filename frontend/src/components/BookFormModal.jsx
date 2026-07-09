@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { booksApi } from '../api'
 import toast from 'react-hot-toast'
-import { STATUS_LABEL, ROLE_LABEL, LANGUAGES, CONDITIONS } from '../constants'
+import { STATUS_LABEL, ROLE_LABEL, LANGUAGES, CONDITIONS, CONDITION_LABEL } from '../constants'
 
 const EMPTY = {
   title: '', subtitle: '', isbn: '', isbn13: '', publisher: '',
@@ -54,7 +54,7 @@ export default function BookFormModal({ book, categories, locations = [], onClos
 
   const submit = async (e) => {
     e.preventDefault()
-    if (!form.title.trim()) { toast.error('Názov je povinný'); return }
+    if (!form.title.trim()) { toast.error('Title is required'); return }
     setSaving(true)
     try {
       const payload = toPayload({ ...form, title: form.title.trim() }, authors, tagsText)
@@ -62,7 +62,7 @@ export default function BookFormModal({ book, categories, locations = [], onClos
       else await booksApi.create(payload)
       onSaved()
     } catch {
-      toast.error('Uloženie zlyhalo')
+      toast.error('Saving failed')
     } finally {
       setSaving(false)
     }
@@ -73,24 +73,24 @@ export default function BookFormModal({ book, categories, locations = [], onClos
       <div className="modal">
         <form onSubmit={submit}>
           <div className="modal-header">
-            <h3>{book ? 'Upraviť knihu' : 'Pridať knihu'}</h3>
+            <h3>{book ? 'Edit book' : 'Add book'}</h3>
             <button type="button" className="btn btn-ghost" onClick={onClose}>✕</button>
           </div>
           <div className="modal-body">
             <div className="form-group">
-              <label>Názov *</label>
+              <label>Title *</label>
               <input className="form-control" value={form.title} onChange={set('title')} autoFocus required />
             </div>
             <div className="form-group">
-              <label>Podtitul</label>
+              <label>Subtitle</label>
               <input className="form-control" value={form.subtitle} onChange={set('subtitle')} />
             </div>
 
             <div className="form-group">
-              <label>Autori</label>
+              <label>Authors</label>
               {authors.map((a, i) => (
                 <div className="author-row" key={i}>
-                  <input className="form-control" placeholder="Meno autora"
+                  <input className="form-control" placeholder="Author name"
                     value={a.name} onChange={setAuthor(i, 'name')} />
                   <select className="form-control" value={a.role} onChange={setAuthor(i, 'role')}>
                     {Object.entries(ROLE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -103,17 +103,17 @@ export default function BookFormModal({ book, categories, locations = [], onClos
               ))}
               <button type="button" className="btn btn-ghost btn-sm"
                 onClick={() => setAuthors(list => [...list, { name: '', role: 'author' }])}>
-                + ďalší autor
+                + add author
               </button>
             </div>
 
             <div className="form-grid-2">
               <div className="form-group">
-                <label>Vydavateľ</label>
+                <label>Publisher</label>
                 <input className="form-control" value={form.publisher} onChange={set('publisher')} />
               </div>
               <div className="form-group">
-                <label>Rok vydania</label>
+                <label>Year published</label>
                 <input className="form-control" type="number" min="0" max="2100"
                   value={form.published_year} onChange={set('published_year')} />
               </div>
@@ -126,39 +126,39 @@ export default function BookFormModal({ book, categories, locations = [], onClos
                 <input className="form-control" value={form.isbn13} onChange={set('isbn13')} />
               </div>
               <div className="form-group">
-                <label>Jazyk</label>
+                <label>Language</label>
                 <select className="form-control" value={form.language} onChange={set('language')}>
                   {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
                 </select>
               </div>
               <div className="form-group">
-                <label>Počet strán</label>
+                <label>Pages</label>
                 <input className="form-control" type="number" min="1" value={form.pages} onChange={set('pages')} />
               </div>
               <div className="form-group">
-                <label>Edícia</label>
+                <label>Edition</label>
                 <input className="form-control" value={form.edition} onChange={set('edition')} />
               </div>
               <div className="form-group">
-                <label>Kategória</label>
+                <label>Category</label>
                 <select className="form-control" value={form.category_id} onChange={set('category_id')}>
-                  <option value="">— bez kategórie —</option>
+                  <option value="">— no category —</option>
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div className="form-group">
-                <label>Umiestnenie</label>
-                <input className="form-control" list="locations-list" placeholder="napr. Obývačka — polica A3"
+                <label>Location</label>
+                <input className="form-control" list="locations-list" placeholder="e.g. Living room — shelf A3"
                   value={form.location} onChange={set('location')} />
                 <datalist id="locations-list">
                   {locations.map(l => <option key={l} value={l} />)}
                 </datalist>
               </div>
               <div className="form-group">
-                <label>Fyzický stav</label>
+                <label>Condition</label>
                 <select className="form-control" value={form.condition} onChange={set('condition')}>
-                  <option value="">— neuvedený —</option>
-                  {CONDITIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                  <option value="">— not specified —</option>
+                  {CONDITIONS.map(c => <option key={c} value={c}>{CONDITION_LABEL[c]}</option>)}
                 </select>
               </div>
               <div className="form-group">
@@ -168,30 +168,30 @@ export default function BookFormModal({ book, categories, locations = [], onClos
                 </select>
               </div>
               <div className="form-group">
-                <label>URL obálky</label>
+                <label>Cover image URL</label>
                 <input className="form-control" placeholder="https://…"
                   value={form.cover_image_url} onChange={set('cover_image_url')} />
               </div>
             </div>
 
             <div className="form-group">
-              <label>Štítky (oddelené čiarkou)</label>
-              <input className="form-control" placeholder="napr. klasika, darček od babky"
+              <label>Tags (comma separated)</label>
+              <input className="form-control" placeholder="e.g. classics, gift from grandma"
                 value={tagsText} onChange={e => setTagsText(e.target.value)} />
             </div>
             <div className="form-group">
-              <label>Popis</label>
+              <label>Description</label>
               <textarea className="form-control" value={form.description} onChange={set('description')} />
             </div>
             <div className="form-group">
-              <label>Poznámky</label>
+              <label>Notes</label>
               <textarea className="form-control" value={form.notes} onChange={set('notes')} />
             </div>
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>Zrušiť</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Ukladám…' : 'Uložiť'}
+              {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
         </form>

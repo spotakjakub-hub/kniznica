@@ -76,7 +76,7 @@ def _book_out(book: Book) -> dict:
 
 @router.get("/", response_model=BookListPage)
 def list_books(
-    q: Optional[str] = Query(None, description="Fulltext: názov, autor, vydavateľ, ISBN"),
+    q: Optional[str] = Query(None, description="Fulltext: title, author, publisher, ISBN"),
     category_id: Optional[int] = None,
     status: Optional[str] = None,
     language: Optional[str] = None,
@@ -138,7 +138,7 @@ def get_book(book_id: str, db: Session = Depends(get_db)):
         .filter(Book.id == book_id).first()
     )
     if not book:
-        raise HTTPException(404, "Kniha nenájdená")
+        raise HTTPException(404, "Book not found")
     return _book_out(book)
 
 
@@ -158,7 +158,7 @@ def create_book(payload: BookCreate, db: Session = Depends(get_db)):
 def update_book(book_id: str, payload: BookUpdate, db: Session = Depends(get_db)):
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
-        raise HTTPException(404, "Kniha nenájdená")
+        raise HTTPException(404, "Book not found")
     for k, v in payload.model_dump(exclude={"authors", "tag_names"}).items():
         setattr(book, k, v)
     _sync_authors(db, book, payload.authors)
@@ -171,6 +171,6 @@ def update_book(book_id: str, payload: BookUpdate, db: Session = Depends(get_db)
 def delete_book(book_id: str, db: Session = Depends(get_db)):
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
-        raise HTTPException(404, "Kniha nenájdená")
+        raise HTTPException(404, "Book not found")
     db.delete(book)
     db.commit()

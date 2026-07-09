@@ -5,8 +5,8 @@ import BooksPage from './pages/BooksPage'
 import BookDetailPage from './pages/BookDetailPage'
 
 const NAV_ITEMS = [
-  { to: '/', icon: '🏠', label: 'Prehľad', end: true },
-  { to: '/books', icon: '📚', label: 'Knihy' },
+  { to: '/', icon: '🏠', label: 'Overview', end: true },
+  { to: '/books', icon: '📚', label: 'Books' },
 ]
 
 function Layout({ children, title }) {
@@ -14,7 +14,7 @@ function Layout({ children, title }) {
     <div className="layout">
       <aside className="sidebar">
         <div className="sidebar-logo">
-          <h1>Kniž<span>nica</span></h1>
+          <h1>Lib<span>rary</span></h1>
         </div>
         <nav>
           {NAV_ITEMS.map(({ to, icon, label, end }) => (
@@ -52,9 +52,9 @@ export default function App() {
     <BrowserRouter>
       <Toaster position="top-center" toastOptions={{ style: { fontFamily: 'var(--font-body)', fontSize: 14 } }} />
       <Routes>
-        <Route path="/" element={<Layout title="Prehľad"><DashboardPage /></Layout>} />
-        <Route path="/books" element={<Layout title="Knihy"><BooksPage /></Layout>} />
-        <Route path="/books/:id" element={<Layout title="Detail knihy"><BookDetailPage /></Layout>} />
+        <Route path="/" element={<Layout title="Overview"><DashboardPage /></Layout>} />
+        <Route path="/books" element={<Layout title="Books"><BooksPage /></Layout>} />
+        <Route path="/books/:id" element={<Layout title="Book detail"><BookDetailPage /></Layout>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

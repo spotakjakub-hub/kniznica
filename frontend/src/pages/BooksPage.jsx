@@ -44,7 +44,7 @@ export default function BooksPage() {
       setBooks(data.items)
       setTotal(data.total)
     } catch {
-      toast.error('Chyba pri načítaní kníh')
+      toast.error('Failed to load books')
     } finally {
       setLoading(false)
     }
@@ -68,37 +68,37 @@ export default function BooksPage() {
         <div className="search-wrap" style={{ flex: 1, minWidth: 200 }}>
           <span className="search-icon">🔍</span>
           <input
-            placeholder="Hľadaj podľa názvu, autora, vydavateľa, ISBN…"
+            placeholder="Search by title, author, publisher, ISBN…"
             value={q}
             onChange={e => setQ(e.target.value)}
           />
         </div>
         <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-          + Pridať knihu
+          + Add book
         </button>
       </div>
 
       <div className="filters-bar">
         <select value={catFilter} onChange={e => { setCatFilter(e.target.value); setPage(0) }}>
-          <option value="">Všetky kategórie</option>
+          <option value="">All categories</option>
           {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <select value={langFilter} onChange={e => { setLangFilter(e.target.value); setPage(0) }}>
-          <option value="">Všetky jazyky</option>
+          <option value="">All languages</option>
           {(languages.length ? languages : LANGUAGES.map(l => l.code)).map(code => (
             <option key={code} value={code}>{langLabel(code)}</option>
           ))}
         </select>
         <select value={locFilter} onChange={e => { setLocFilter(e.target.value); setPage(0) }}>
-          <option value="">Všetky umiestnenia</option>
+          <option value="">All locations</option>
           {locations.map(l => <option key={l} value={l}>{l}</option>)}
         </select>
         <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(0) }}>
-          <option value="">Všetky stavy</option>
+          <option value="">All statuses</option>
           {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
         <span style={{ fontSize: 13, color: 'var(--ink-4)', marginLeft: 'auto' }}>
-          {total} kníh
+          {total} books
         </span>
       </div>
 
@@ -107,7 +107,7 @@ export default function BooksPage() {
       ) : books.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">📚</div>
-          <p>{hasFilters ? 'Žiadne výsledky pre dané filtre' : 'Knižnica je prázdna. Pridajte prvú knihu!'}</p>
+          <p>{hasFilters ? 'No results for these filters' : 'The library is empty. Add your first book!'}</p>
         </div>
       ) : (
         <>
@@ -137,11 +137,11 @@ export default function BooksPage() {
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 24, alignItems: 'center' }}>
               <button className="btn btn-secondary btn-sm" disabled={page === 0}
                 style={page === 0 ? { opacity: .4, cursor: 'default' } : {}}
-                onClick={() => setPage(p => p - 1)}>← Predchádzajúca</button>
+                onClick={() => setPage(p => p - 1)}>← Previous</button>
               <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>{page + 1} / {pages}</span>
               <button className="btn btn-secondary btn-sm" disabled={page >= pages - 1}
                 style={page >= pages - 1 ? { opacity: .4, cursor: 'default' } : {}}
-                onClick={() => setPage(p => p + 1)}>Ďalšia →</button>
+                onClick={() => setPage(p => p + 1)}>Next →</button>
             </div>
           )}
         </>
@@ -152,7 +152,7 @@ export default function BooksPage() {
           categories={categories}
           locations={locations}
           onClose={() => setShowForm(false)}
-          onSaved={() => { setShowForm(false); load(); loadMeta(); toast.success('Kniha uložená!') }}
+          onSaved={() => { setShowForm(false); load(); loadMeta(); toast.success('Book saved!') }}
         />
       )}
     </div>

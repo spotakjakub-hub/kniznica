@@ -1,19 +1,20 @@
-export const STATUS_LABEL = { available: 'Dostupná', missing: 'Chýba', damaged: 'Poškodená' }
+export const STATUS_LABEL = { available: 'Available', missing: 'Missing', damaged: 'Damaged' }
 export const STATUS_BADGE = { available: 'badge-available', missing: 'badge-missing', damaged: 'badge-damaged' }
-export const ROLE_LABEL = { author: 'Autor', editor: 'Editor', translator: 'Prekladateľ' }
+export const ROLE_LABEL = { author: 'Author', editor: 'Editor', translator: 'Translator' }
 export const LANGUAGES = [
-  { code: 'sk', label: 'slovenčina' },
-  { code: 'cs', label: 'čeština' },
-  { code: 'en', label: 'angličtina' },
-  { code: 'de', label: 'nemčina' },
-  { code: 'hu', label: 'maďarčina' },
-  { code: 'ru', label: 'ruština' },
-  { code: 'pl', label: 'poľština' },
-  { code: 'fr', label: 'francúzština' },
-  { code: 'la', label: 'latinčina' },
+  { code: 'sk', label: 'Slovak' },
+  { code: 'cs', label: 'Czech' },
+  { code: 'en', label: 'English' },
+  { code: 'de', label: 'German' },
+  { code: 'hu', label: 'Hungarian' },
+  { code: 'ru', label: 'Russian' },
+  { code: 'pl', label: 'Polish' },
+  { code: 'fr', label: 'French' },
+  { code: 'la', label: 'Latin' },
 ]
 export const LANGUAGE_LABEL = Object.fromEntries(LANGUAGES.map(l => [l.code, l.label]))
-export const CONDITIONS = ['výborný', 'dobrý', 'opotrebovaný', 'poškodený']
+export const CONDITIONS = ['excellent', 'good', 'worn', 'damaged']
+export const CONDITION_LABEL = { excellent: 'Excellent', good: 'Good', worn: 'Worn', damaged: 'Damaged' }
 
 export function langLabel(code) {
   return LANGUAGE_LABEL[code] || code

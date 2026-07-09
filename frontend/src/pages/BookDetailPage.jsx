@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { booksApi, categoriesApi, metaApi } from '../api'
 import BookFormModal from '../components/BookFormModal'
 import toast from 'react-hot-toast'
-import { STATUS_LABEL, STATUS_BADGE, ROLE_LABEL, langLabel } from '../constants'
+import { STATUS_LABEL, STATUS_BADGE, ROLE_LABEL, CONDITION_LABEL, langLabel } from '../constants'
 
 export default function BookDetailPage() {
   const { id } = useParams()
@@ -20,7 +20,7 @@ export default function BookDetailPage() {
       const { data } = await booksApi.get(id)
       setBook(data)
     } catch {
-      toast.error('Kniha nenájdená')
+      toast.error('Book not found')
       nav('/books')
     } finally {
       setLoading(false)
@@ -34,13 +34,13 @@ export default function BookDetailPage() {
   }, [])
 
   const remove = async () => {
-    if (!window.confirm(`Naozaj vymazať knihu „${book.title}“?`)) return
+    if (!window.confirm(`Really delete “${book.title}”?`)) return
     try {
       await booksApi.delete(id)
-      toast.success('Kniha vymazaná')
+      toast.success('Book deleted')
       nav('/books')
     } catch {
-      toast.error('Vymazanie zlyhalo')
+      toast.error('Delete failed')
     }
   }
 
@@ -49,25 +49,25 @@ export default function BookDetailPage() {
   }
 
   const meta = [
-    ['Vydavateľ', book.publisher],
-    ['Rok vydania', book.published_year],
-    ['Jazyk', book.language && langLabel(book.language)],
-    ['Počet strán', book.pages],
-    ['Edícia', book.edition],
+    ['Publisher', book.publisher],
+    ['Year published', book.published_year],
+    ['Language', book.language && langLabel(book.language)],
+    ['Pages', book.pages],
+    ['Edition', book.edition],
     ['ISBN', book.isbn],
     ['ISBN-13', book.isbn13],
-    ['Kategória', book.category?.name],
-    ['Umiestnenie', book.location],
-    ['Fyzický stav', book.condition],
+    ['Category', book.category?.name],
+    ['Location', book.location],
+    ['Condition', book.condition && (CONDITION_LABEL[book.condition] || book.condition)],
   ].filter(([, v]) => v)
 
   return (
     <div>
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-        <button className="btn btn-ghost" onClick={() => nav('/books')}>← Späť na katalóg</button>
+        <button className="btn btn-ghost" onClick={() => nav('/books')}>← Back to catalog</button>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-          <button className="btn btn-secondary" onClick={() => setEditing(true)}>✏️ Upraviť</button>
-          <button className="btn btn-danger" onClick={remove}>🗑 Vymazať</button>
+          <button className="btn btn-secondary" onClick={() => setEditing(true)}>✏️ Edit</button>
+          <button className="btn btn-danger" onClick={remove}>🗑 Delete</button>
         </div>
       </div>
 
@@ -111,13 +111,13 @@ export default function BookDetailPage() {
 
       {book.description && (
         <div className="card" style={{ padding: 20, marginBottom: 16 }}>
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, marginBottom: 8 }}>Popis</h3>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, marginBottom: 8 }}>Description</h3>
           <p className="book-description">{book.description}</p>
         </div>
       )}
       {book.notes && (
         <div className="card" style={{ padding: 20 }}>
-          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, marginBottom: 8 }}>Poznámky</h3>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, marginBottom: 8 }}>Notes</h3>
           <p className="book-description">{book.notes}</p>
         </div>
       )}
@@ -128,7 +128,7 @@ export default function BookDetailPage() {
           categories={categories}
           locations={locations}
           onClose={() => setEditing(false)}
-          onSaved={() => { setEditing(false); load(); toast.success('Zmeny uložené!') }}
+          onSaved={() => { setEditing(false); load(); toast.success('Changes saved!') }}
         />
       )}
     </div>

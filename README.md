@@ -1,22 +1,22 @@
-# Rodinná knižnica
+# Family Library
 
-Webová aplikácia na katalogizáciu rodinnej knižnice. Fáza 1 (MVP): katalóg s vyhľadávaním a filtrami, ručné pridávanie kníh, viacerí autori, umiestnenia, kategórie a štítky.
+Web app for cataloguing a family book library. Phase 1 (MVP): catalog with search and filters, manual book entry, multiple authors per book, locations, categories and tags.
 
-**Živá aplikácia:** https://kniznica-jet.vercel.app
-**API:** https://kniznica-api.onrender.com/api (dokumentácia na `/docs`)
+**Live app:** https://kniznica-jet.vercel.app
+**API:** https://kniznica-api.onrender.com/api (docs at `/docs`)
 **Repo:** https://github.com/spotakjakub-hub/kniznica
 
-> Backend beží na Render free tieri — po ~15 min nečinnosti zaspí a prvé načítanie môže trvať ~30–60 s.
+> The backend runs on Render's free tier — it sleeps after ~15 min of inactivity and the first load may take ~30–60 s.
 
-## Architektúra
+## Architecture
 
-| Vrstva | Technológia | Hosting |
+| Layer | Technology | Hosting |
 |---|---|---|
-| Databáza | PostgreSQL | Supabase |
+| Database | PostgreSQL | Supabase |
 | Backend | Python FastAPI | Render.com |
 | Frontend | React + Vite | Vercel |
 
-## Lokálny vývoj
+## Local development
 
 ### Backend
 
@@ -24,13 +24,13 @@ Webová aplikácia na katalogizáciu rodinnej knižnice. Fáza 1 (MVP): katalóg
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # doplň DATABASE_URL (Supabase Session pooler)
+cp .env.example .env   # set DATABASE_URL (Supabase Session pooler)
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-API beží na http://localhost:8000, dokumentácia na http://localhost:8000/docs.
+API runs at http://localhost:8000, docs at http://localhost:8000/docs. Without `DATABASE_URL` it falls back to a local SQLite file (dev only).
 
-> Pozn.: ak pip zlyháva na SSL (mobilné dáta), použi
+> Note: if pip fails on SSL (mobile data), use
 > `pip install -r requirements.txt --index-url https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com`
 
 ### Frontend
@@ -41,26 +41,26 @@ npm install
 npm run dev
 ```
 
-Beží na http://localhost:5173, `/api` sa proxuje na backend (port 8000).
+Runs at http://localhost:5173; `/api` is proxied to the backend (port 8000).
 
-## Nasadenie
+## Deployment
 
-- **Supabase:** vytvor projekt, connection string (Session pooler) patrí do `DATABASE_URL`. Tabuľky sa vytvoria automaticky pri štarte backendu, rozšírenie `unaccent` sa zapne tiež automaticky (vyhľadávanie bez diakritiky).
-- **Render:** repo obsahuje `render.yaml` (Blueprint). Nastav env `DATABASE_URL` a `CORS_ORIGINS` (URL Vercel aplikácie).
-- **Vercel:** root directory `frontend`, framework Vite. Nastav env `VITE_API_URL` na `https://<render-app>.onrender.com/api`.
+- **Supabase:** create a project; the Session pooler connection string goes into `DATABASE_URL`. Tables are created automatically on backend startup, and the `unaccent` extension is enabled automatically (diacritics-insensitive search).
+- **Render:** the repo contains `render.yaml` (Blueprint). Set the `DATABASE_URL` and `CORS_ORIGINS` (Vercel app URL) env vars.
+- **Vercel:** root directory `frontend`, framework Vite. Set `VITE_API_URL` to `https://<render-app>.onrender.com/api`.
 
-## API prehľad
+## API overview
 
-- `GET/POST /api/books/` — zoznam (q, category_id, status, language, location, sort, skip, limit) / vytvorenie
+- `GET/POST /api/books/` — list (q, category_id, status, language, location, sort, skip, limit) / create
 - `GET/PUT/DELETE /api/books/{id}`
 - `GET/POST /api/categories/`
 - `GET /api/meta/locations`, `GET /api/meta/languages`, `GET /api/meta/stats`
 - `GET /api/health`
 
-Endpointy kolekcií treba volať s lomkou na konci (`/api/books/`), inak FastAPI vráti 307.
+Collection endpoints must be called with a trailing slash (`/api/books/`), otherwise FastAPI returns a 307 redirect.
 
-## Ďalšie fázy
+## Next phases
 
-2. AI identifikácia z fotky (Gemini) + Open Library/Google Books
-3. Hromadný (batch) režim s frontou
-4. Export, štatistiky, výpožičky, auth
+2. AI identification from a cover photo (Gemini) + Open Library/Google Books lookup
+3. Batch mode with a background queue
+4. CSV export, statistics, lending, auth
