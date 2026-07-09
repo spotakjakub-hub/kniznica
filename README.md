@@ -2,6 +2,12 @@
 
 Webová aplikácia na katalogizáciu rodinnej knižnice. Fáza 1 (MVP): katalóg s vyhľadávaním a filtrami, ručné pridávanie kníh, viacerí autori, umiestnenia, kategórie a štítky.
 
+**Živá aplikácia:** https://kniznica-jet.vercel.app
+**API:** https://kniznica-api.onrender.com/api (dokumentácia na `/docs`)
+**Repo:** https://github.com/spotakjakub-hub/kniznica
+
+> Backend beží na Render free tieri — po ~15 min nečinnosti zaspí a prvé načítanie môže trvať ~30–60 s.
+
 ## Architektúra
 
 | Vrstva | Technológia | Hosting |
