@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { booksApi, categoriesApi } from '../api'
 import toast from 'react-hot-toast'
+import SelectWithCustom from './SelectWithCustom'
 import { STATUS_LABEL, ROLE_LABEL, LANGUAGES, CONDITIONS, CONDITION_LABEL } from '../constants'
 
 const EMPTY = {
@@ -97,9 +98,13 @@ export default function BookFormModal({ book, categories, locations = [], onClos
                 <div className="author-row" key={i}>
                   <input className="form-control" placeholder="Author name"
                     value={a.name} onChange={setAuthor(i, 'name')} />
-                  <select className="form-control" value={a.role} onChange={setAuthor(i, 'role')}>
-                    {Object.entries(ROLE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                  </select>
+                  <SelectWithCustom compact
+                    value={a.role}
+                    onChange={v => setAuthor(i, 'role')({ target: { value: v } })}
+                    options={Object.entries(ROLE_LABEL).map(([v, l]) => ({ value: v, label: l }))}
+                    resetValue="author"
+                    placeholder="Role"
+                  />
                   {authors.length > 1 && (
                     <button type="button" className="remove-btn"
                       onClick={() => setAuthors(list => list.filter((_, j) => j !== i))}>✕</button>
@@ -132,9 +137,13 @@ export default function BookFormModal({ book, categories, locations = [], onClos
               </div>
               <div className="form-group">
                 <label>Language</label>
-                <select className="form-control" value={form.language} onChange={set('language')}>
-                  {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
-                </select>
+                <SelectWithCustom
+                  value={form.language}
+                  onChange={v => setForm(f => ({ ...f, language: v }))}
+                  options={LANGUAGES.map(l => ({ value: l.code, label: l.label }))}
+                  resetValue="en"
+                  placeholder="e.g. Italian"
+                />
               </div>
               <div className="form-group">
                 <label>Pages</label>
@@ -175,10 +184,13 @@ export default function BookFormModal({ book, categories, locations = [], onClos
               </div>
               <div className="form-group">
                 <label>Condition</label>
-                <select className="form-control" value={form.condition} onChange={set('condition')}>
-                  <option value="">— not specified —</option>
-                  {CONDITIONS.map(c => <option key={c} value={c}>{CONDITION_LABEL[c]}</option>)}
-                </select>
+                <SelectWithCustom
+                  value={form.condition}
+                  onChange={v => setForm(f => ({ ...f, condition: v }))}
+                  options={CONDITIONS.map(c => ({ value: c, label: CONDITION_LABEL[c] }))}
+                  emptyLabel="— not specified —"
+                  placeholder="e.g. missing dust jacket"
+                />
               </div>
               <div className="form-group">
                 <label>Status</label>
