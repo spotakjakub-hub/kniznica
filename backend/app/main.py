@@ -25,16 +25,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Family Library API", version="0.1.0", lifespan=lifespan)
 
-# Comma-separated list of allowed origins, e.g. "https://kniznica.vercel.app,http://localhost:5173"
-origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(",") if o.strip()]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Optional shared-password protection: set LIBRARY_PASSWORD to switch it on.
 # The whole family uses one password; the frontend sends it as X-Library-Key.
 LIBRARY_PASSWORD = os.environ.get("LIBRARY_PASSWORD", "")
@@ -53,6 +43,19 @@ async def shared_password_guard(request, call_next):
         if not secrets.compare_digest(supplied, LIBRARY_PASSWORD):
             return JSONResponse({"detail": "Unauthorized"}, status_code=401)
     return await call_next(request)
+
+
+# CORS must be registered AFTER the password guard: the middleware added last
+# runs outermost, so even the guard's 401 responses get CORS headers —
+# otherwise the browser drops them and the frontend never sees the 401.
+origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(",") if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 app.include_router(books.router)
