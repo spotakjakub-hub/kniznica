@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { scanApi } from '../api'
+import { downscaleImage } from '../imageUtil'
 
 const TABS = [
   { id: 'photo', label: '📷 Photo' },
@@ -82,7 +83,9 @@ export default function ScanModal({ onClose, onDone }) {
     if (!coverFile) { toast.error('Add a cover photo first'); return }
     setBusy(true)
     try {
-      const { data } = await scanApi.identify(coverFile, extraFile)
+      const cover = await downscaleImage(coverFile)
+      const extra = extraFile ? await downscaleImage(extraFile) : null
+      const { data } = await scanApi.identify(cover, extra)
       const conf = data.prefill?.ai_confidence
       if (conf != null && conf < 0.5) toast('Low AI confidence — please check the details', { icon: '⚠️' })
       onDone(data.prefill)

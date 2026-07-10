@@ -3,10 +3,12 @@ import { Toaster } from 'react-hot-toast'
 import DashboardPage from './pages/DashboardPage'
 import BooksPage from './pages/BooksPage'
 import BookDetailPage from './pages/BookDetailPage'
+import ReviewPage from './pages/ReviewPage'
 
 const NAV_ITEMS = [
   { to: '/', icon: '🏠', label: 'Overview', end: true },
   { to: '/books', icon: '📚', label: 'Books' },
+  { to: '/review', icon: '🧺', label: 'Review' },
 ]
 
 function Layout({ children, title }) {
@@ -55,6 +57,7 @@ export default function App() {
         <Route path="/" element={<Layout title="Overview"><DashboardPage /></Layout>} />
         <Route path="/books" element={<Layout title="Books"><BooksPage /></Layout>} />
         <Route path="/books/:id" element={<Layout title="Book detail"><BookDetailPage /></Layout>} />
+        <Route path="/review" element={<Layout title="Batch review"><ReviewPage /></Layout>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

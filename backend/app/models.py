@@ -1,6 +1,6 @@
 from sqlalchemy import (
     Column, String, Integer, Text, DateTime,
-    ForeignKey, Float, Enum as SAEnum,
+    ForeignKey, Float, Enum as SAEnum, JSON,
 )
 from sqlalchemy.orm import relationship, DeclarativeBase
 from sqlalchemy.sql import func
@@ -88,3 +88,16 @@ class BookTag(Base):
     tag_id = Column(Integer, ForeignKey("tags.id"), primary_key=True)
     book = relationship("Book", back_populates="tags")
     tag = relationship("Tag", back_populates="books")
+
+
+class ScanJob(Base):
+    """Batch-mode queue: one uploaded cover photo waiting for AI identification."""
+    __tablename__ = "scan_jobs"
+    id = Column(String, primary_key=True, default=gen_uuid)
+    cover_url = Column(String(1000), nullable=False)
+    status = Column(String(20), default="pending", index=True)  # pending / processing / done / failed
+    location = Column(String(200))   # optional batch-wide shelf location
+    result = Column(JSON)            # prefill dict once identified
+    error = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

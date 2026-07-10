@@ -4,8 +4,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db, SessionLocal
-from app.routers import books, categories, meta, scan
+from app.routers import books, categories, meta, scan, queue
 from app.routers.categories import seed_categories
+from app.services import queue_worker
 
 
 @asynccontextmanager
@@ -16,6 +17,7 @@ async def lifespan(app: FastAPI):
         seed_categories(db)
     finally:
         db.close()
+    queue_worker.resume_on_startup()
     yield
 
 
@@ -35,6 +37,7 @@ app.include_router(books.router)
 app.include_router(categories.router)
 app.include_router(meta.router)
 app.include_router(scan.router)
+app.include_router(queue.router)
 
 
 @app.get("/api/health")

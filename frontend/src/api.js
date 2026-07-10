@@ -29,6 +29,18 @@ export const scanApi = {
   search: (title, author) => api.get('/scan/search', { params: { title, author: author || undefined } }),
 }
 
+export const queueApi = {
+  upload: (files, location) => {
+    const fd = new FormData()
+    for (const f of files) fd.append('files', f)
+    if (location) fd.append('location', location)
+    return api.post('/queue/upload', fd, { timeout: 120000 })
+  },
+  list: () => api.get('/queue/'),
+  retry: (id) => api.post(`/queue/${id}/retry`),
+  delete: (id) => api.delete(`/queue/${id}`),
+}
+
 export const metaApi = {
   locations: () => api.get('/meta/locations'),
   languages: () => api.get('/meta/languages'),

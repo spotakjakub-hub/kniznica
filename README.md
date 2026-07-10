@@ -66,7 +66,12 @@ Collection endpoints must be called with a trailing slash (`/api/books/`), other
 - `GET /api/scan/search?title=&author=` — candidate search
 - Backend env: `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, optional `GEMINI_MODEL` (falls back through gemini-3.5-flash -> flash-latest -> 3.1-flash-lite -> 2.0-flash)
 
+## Batch mode (Phase 3)
+
+- **Review page** (`/review`): drop dozens of cover photos; they upload to Supabase Storage, queue in the `scan_jobs` table and get identified by an in-process background worker (no separate dyno on Render's free tier — the worker resumes pending jobs on startup). Confirm/edit/reject one by one; an optional batch-wide shelf location is applied to every photo.
+- `POST /api/queue/upload` (multipart `files[]` + optional `location`), `GET /api/queue/`, `POST /api/queue/{id}/retry`, `DELETE /api/queue/{id}`
+- Photos are downscaled client-side (max 1600 px JPEG) before upload.
+
 ## Next phases
 
-3. Batch mode with a background queue
 4. CSV export, statistics, lending, auth
