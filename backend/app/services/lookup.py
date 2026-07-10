@@ -1,4 +1,5 @@
 """Book metadata lookup: Open Library + Google Books + Crossref (all free, no key needed)."""
+import os
 import re
 import unicodedata
 from difflib import SequenceMatcher
@@ -178,11 +179,16 @@ def google_books_search(title: str, author: Optional[str] = None) -> List[dict]:
 def crossref_search(title: str, author: Optional[str] = None) -> List[dict]:
     """Crossref covers academic monographs and edited volumes well."""
     try:
-        r = httpx.get("https://api.crossref.org/works", params={
+        params = {
             "query.bibliographic": f"{title} {author or ''}".strip(),
             "filter": "type:book,type:monograph,type:edited-book,type:reference-book",
             "rows": 5,
-        }, timeout=TIMEOUT)
+        }
+        # identifies us for Crossref's "polite pool" (anonymous cloud IPs get throttled)
+        mailto = os.environ.get("CROSSREF_MAILTO")
+        if mailto:
+            params["mailto"] = mailto
+        r = httpx.get("https://api.crossref.org/works", params=params, timeout=TIMEOUT)
         items = r.json().get("message", {}).get("items", [])
     except Exception:
         return []
