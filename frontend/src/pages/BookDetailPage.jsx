@@ -1,9 +1,78 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { booksApi, categoriesApi, metaApi } from '../api'
+import { booksApi, categoriesApi, metaApi, loansApi } from '../api'
 import BookFormModal from '../components/BookFormModal'
 import toast from 'react-hot-toast'
 import { STATUS_LABEL, STATUS_BADGE, ROLE_LABEL, CONDITION_LABEL, langLabel } from '../constants'
+
+function LendingCard({ book, onChanged }) {
+  const [borrower, setBorrower] = useState('')
+  const [busy, setBusy] = useState(false)
+  const loan = book.active_loan
+  const history = (book.loans || []).filter(l => l.returned_at)
+
+  const fmt = (iso) => iso ? new Date(iso).toLocaleDateString() : ''
+
+  const lend = async (e) => {
+    e.preventDefault()
+    if (!borrower.trim()) return
+    setBusy(true)
+    try {
+      await loansApi.lend(book.id, borrower.trim())
+      setBorrower('')
+      toast.success('Marked as lent')
+      onChanged()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to lend')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const giveBack = async () => {
+    setBusy(true)
+    try {
+      await loansApi.return(loan.id)
+      toast.success('Marked as returned')
+      onChanged()
+    } catch {
+      toast.error('Failed to return')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="card" style={{ padding: 20, marginBottom: 16 }}>
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 17, marginBottom: 10 }}>Lending</h3>
+      {loan ? (
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span className="badge badge-missing">On loan</span>
+          <span style={{ fontSize: 14 }}>
+            Lent to <strong>{loan.borrower}</strong> since {fmt(loan.loaned_at)}
+          </span>
+          <button className="btn btn-secondary btn-sm" disabled={busy} onClick={giveBack}>
+            ↩ Mark as returned
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={lend} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input className="form-control" style={{ maxWidth: 260 }}
+            placeholder="Who is borrowing it?"
+            value={borrower} onChange={e => setBorrower(e.target.value)} />
+          <button className="btn btn-secondary" disabled={busy || !borrower.trim()}>📖 Lend</button>
+        </form>
+      )}
+      {history.length > 0 && (
+        <div style={{ marginTop: 12, fontSize: 13, color: 'var(--ink-3)' }}>
+          {history.map(l => (
+            <div key={l.id}>↩ {l.borrower}: {fmt(l.loaned_at)} → {fmt(l.returned_at)}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function BookDetailPage() {
   const { id } = useParams()
@@ -110,6 +179,8 @@ export default function BookDetailPage() {
           </div>
         </div>
       </div>
+
+      <LendingCard book={book} onChanged={load} />
 
       {book.description && (
         <div className="card" style={{ padding: 20, marginBottom: 16 }}>

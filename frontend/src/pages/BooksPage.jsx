@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { booksApi, categoriesApi, metaApi } from '../api'
+import { booksApi, categoriesApi, metaApi, exportApi } from '../api'
 import BookFormModal from '../components/BookFormModal'
 import ScanModal from '../components/ScanModal'
 import toast from 'react-hot-toast'
@@ -76,6 +76,10 @@ export default function BooksPage() {
             onChange={e => setQ(e.target.value)}
           />
         </div>
+        <button className="btn btn-ghost" title="Export catalog to CSV"
+          onClick={() => exportApi.downloadCsv().catch(() => toast.error('Export failed'))}>
+          ⬇ CSV
+        </button>
         <button className="btn btn-secondary" onClick={() => setShowScan(true)}>
           📷 Scan
         </button>

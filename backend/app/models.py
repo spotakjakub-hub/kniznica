@@ -64,6 +64,8 @@ class Book(Base):
     category = relationship("Category", back_populates="books")
     authors = relationship("BookAuthor", back_populates="book", cascade="all, delete-orphan")
     tags = relationship("BookTag", back_populates="book", cascade="all, delete-orphan")
+    loans = relationship("Loan", back_populates="book", cascade="all, delete-orphan",
+                         order_by="Loan.loaned_at.desc()")
 
 
 class BookAuthor(Base):
@@ -88,6 +90,17 @@ class BookTag(Base):
     tag_id = Column(Integer, ForeignKey("tags.id"), primary_key=True)
     book = relationship("Book", back_populates="tags")
     tag = relationship("Tag", back_populates="books")
+
+
+class Loan(Base):
+    __tablename__ = "loans"
+    id = Column(String, primary_key=True, default=gen_uuid)
+    book_id = Column(String, ForeignKey("books.id", ondelete="CASCADE"), nullable=False, index=True)
+    borrower = Column(String(200), nullable=False)
+    note = Column(Text)
+    loaned_at = Column(DateTime(timezone=True), server_default=func.now())
+    returned_at = Column(DateTime(timezone=True), nullable=True)
+    book = relationship("Book", back_populates="loans")
 
 
 class ScanJob(Base):

@@ -72,6 +72,9 @@ Collection endpoints must be called with a trailing slash (`/api/books/`), other
 - `POST /api/queue/upload` (multipart `files[]` + optional `location`), `GET /api/queue/`, `POST /api/queue/{id}/retry`, `DELETE /api/queue/{id}`
 - Photos are downscaled client-side (max 1600 px JPEG) before upload.
 
-## Next phases
+## Phase 4: export, lending, auth
 
-4. CSV export, statistics, lending, auth
+- `GET /api/export/csv` — full catalog export (UTF-8 BOM, `;`-separated for European Excel); ⬇ CSV button on the Books page
+- **Lending:** `POST /api/books/{id}/lend`, `POST /api/loans/{id}/return`, `GET /api/loans/active`; lending card with history on the book detail page
+- **Richer stats:** by category, top authors, by decade, active loans — shown on the Overview page
+- **Optional shared password:** set the `LIBRARY_PASSWORD` env var on the backend to require it; the frontend shows an unlock screen and sends the password as the `X-Library-Key` header. Unset = open access.

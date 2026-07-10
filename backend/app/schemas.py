@@ -65,6 +65,8 @@ class BookOut(BookBase):
     category: Optional[CategoryOut] = None
     authors: List[AuthorOut] = []
     tags: List[TagOut] = []
+    active_loan: Optional[dict] = None
+    loans: List[dict] = []
 
 
 class BookListItem(BaseModel):
@@ -92,3 +94,7 @@ class StatsOut(BaseModel):
     by_status: dict
     by_language: dict
     by_location: dict
+    by_category: dict = {}
+    top_authors: List[dict] = []
+    by_decade: dict = {}
+    loans_active: int = 0

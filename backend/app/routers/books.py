@@ -60,6 +60,7 @@ def _sync_tags(db: Session, book: Book, tag_names):
 
 
 def _book_out(book: Book) -> dict:
+    active = next((l for l in book.loans if l.returned_at is None), None)
     return {
         **{c.name: getattr(book, c.name) for c in Book.__table__.columns},
         "authors": [
@@ -71,6 +72,17 @@ def _book_out(book: Book) -> dict:
             {"id": book.category.id, "name": book.category.name, "description": book.category.description}
             if book.category else None
         ),
+        "active_loan": (
+            {"id": active.id, "borrower": active.borrower, "note": active.note,
+             "loaned_at": active.loaned_at.isoformat() if active.loaned_at else None}
+            if active else None
+        ),
+        "loans": [
+            {"id": l.id, "borrower": l.borrower,
+             "loaned_at": l.loaned_at.isoformat() if l.loaned_at else None,
+             "returned_at": l.returned_at.isoformat() if l.returned_at else None}
+            for l in book.loans
+        ],
     }
 
 
@@ -119,6 +131,7 @@ def list_books(
         query.options(
             joinedload(Book.authors).joinedload(BookAuthor.author),
             joinedload(Book.category),
+            joinedload(Book.loans),
         )
         .order_by(sort_expr, Book.id)
         .offset(skip).limit(limit).all()
@@ -134,6 +147,7 @@ def get_book(book_id: str, db: Session = Depends(get_db)):
             joinedload(Book.authors).joinedload(BookAuthor.author),
             joinedload(Book.tags).joinedload(BookTag.tag),
             joinedload(Book.category),
+            joinedload(Book.loans),
         )
         .filter(Book.id == book_id).first()
     )

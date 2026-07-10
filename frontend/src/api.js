@@ -4,6 +4,26 @@ import axios from 'axios'
 // lokálne padá na Vite proxy /api -> localhost:8000
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' })
 
+// Zdieľané heslo (ak je na backende zapnuté LIBRARY_PASSWORD)
+api.interceptors.request.use(cfg => {
+  const key = localStorage.getItem('library_key')
+  if (key) cfg.headers['X-Library-Key'] = key
+  return cfg
+})
+api.interceptors.response.use(
+  r => r,
+  err => {
+    if (err.response?.status === 401) {
+      window.dispatchEvent(new Event('library-unauthorized'))
+    }
+    return Promise.reject(err)
+  }
+)
+
+export const authApi = {
+  check: (key) => api.get('/auth/check', { params: { key } }),
+}
+
 // Kolekcie voláme s lomkou na konci, inak FastAPI vracia 307 redirect
 export const booksApi = {
   list: (params) => api.get('/books/', { params }),
@@ -45,6 +65,24 @@ export const metaApi = {
   locations: () => api.get('/meta/locations'),
   languages: () => api.get('/meta/languages'),
   stats: () => api.get('/meta/stats'),
+}
+
+export const loansApi = {
+  lend: (bookId, borrower, note) => api.post(`/books/${bookId}/lend`, { borrower, note }),
+  return: (loanId) => api.post(`/loans/${loanId}/return`),
+  active: () => api.get('/loans/active'),
+}
+
+export const exportApi = {
+  downloadCsv: async () => {
+    const { data } = await api.get('/export/csv', { responseType: 'blob' })
+    const url = URL.createObjectURL(data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `library-export-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  },
 }
 
 export default api
