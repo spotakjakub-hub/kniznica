@@ -1,10 +1,52 @@
-"""Book metadata lookup: Open Library + Google Books (both free, no key needed)."""
+"""Book metadata lookup: Open Library + Google Books + Crossref (all free, no key needed)."""
 import re
+import unicodedata
+from difflib import SequenceMatcher
 from typing import List, Optional
 
 import httpx
 
 TIMEOUT = 15
+
+
+def _norm(s: Optional[str]) -> str:
+    if not s:
+        return ""
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return re.sub(r"[^a-z0-9 ]", "", s.lower()).strip()
+
+
+def title_similarity(a: Optional[str], b: Optional[str]) -> float:
+    na, nb = _norm(a), _norm(b)
+    if not na or not nb:
+        return 0.0
+    # allow subtitle-included vs bare-title matches
+    if na.startswith(nb) or nb.startswith(na):
+        return 0.95
+    ratio = SequenceMatcher(None, na, nb).ratio()
+    ta, tb = set(na.split()), set(nb.split())
+    jaccard = len(ta & tb) / len(ta | tb) if ta | tb else 0.0
+    return (ratio + jaccard) / 2
+
+
+def rank_candidates(candidates: List[dict], title: Optional[str], author: Optional[str] = None) -> List[dict]:
+    """Sorts candidates by similarity to the wanted title/author; drops clear mismatches."""
+    if not title:
+        return candidates
+    scored = []
+    for c in candidates:
+        title_score = title_similarity(c.get("title"), title)
+        if title_score < 0.65:
+            continue  # the author bonus must not rescue a wrong title
+        bonus = 0.0
+        if author and c.get("authors"):
+            surname = _norm(author).split()[-1] if _norm(author) else ""
+            if surname and any(surname in _norm(a) for a in c["authors"]):
+                bonus = 0.15
+        scored.append((title_score + bonus, c))
+    scored.sort(key=lambda x: -x[0])
+    return [c for _, c in scored]
 
 
 def normalize_isbn(raw: Optional[str]) -> Optional[str]:
@@ -126,7 +168,44 @@ def google_books_search(title: str, author: Optional[str] = None) -> List[dict]:
     q = f'intitle:"{title}"'
     if author:
         q += f' inauthor:"{author}"'
-    return _google_items({"q": q})
+    strict = _google_items({"q": q})
+    if strict:
+        return strict
+    # loose retry: academic titles often differ slightly from the cover text
+    return _google_items({"q": f"{title} {author or ''}".strip()})
+
+
+def crossref_search(title: str, author: Optional[str] = None) -> List[dict]:
+    """Crossref covers academic monographs and edited volumes well."""
+    try:
+        r = httpx.get("https://api.crossref.org/works", params={
+            "query.bibliographic": f"{title} {author or ''}".strip(),
+            "filter": "type:book,type:monograph,type:edited-book,type:reference-book",
+            "rows": 5,
+        }, timeout=TIMEOUT)
+        items = r.json().get("message", {}).get("items", [])
+    except Exception:
+        return []
+    out = []
+    for it in items[:5]:
+        date = it.get("published-print") or it.get("published") or {}
+        year = (date.get("date-parts") or [[None]])[0][0]
+        isbns = it.get("ISBN") or []
+        isbns = [re.sub(r"[^0-9Xx]", "", i) for i in isbns]
+        out.append(_candidate(
+            "crossref",
+            title=(it.get("title") or [None])[0],
+            subtitle=(it.get("subtitle") or [None])[0],
+            authors=[
+                f"{a.get('given', '')} {a.get('family', '')}".strip()
+                for a in it.get("author", []) + it.get("editor", [])
+            ],
+            publisher=it.get("publisher"),
+            published_year=year,
+            isbn=next((i for i in isbns if len(i) == 10), None),
+            isbn13=next((i for i in isbns if len(i) == 13), None),
+        ))
+    return out
 
 
 def by_isbn(isbn: str) -> List[dict]:
@@ -137,31 +216,51 @@ def by_isbn(isbn: str) -> List[dict]:
 
 
 def by_title_author(title: str, author: Optional[str] = None) -> List[dict]:
-    return open_library_search(title, author) + google_books_search(title, author)
+    candidates = (
+        open_library_search(title, author)
+        + google_books_search(title, author)
+        + crossref_search(title, author)
+    )
+    return rank_candidates(candidates, title, author)
 
 
 def merge_prefill(ai: dict, candidates: List[dict], cover_url: Optional[str]) -> dict:
     """AI reading of the physical book wins; lookups fill in the gaps."""
-    best = candidates[0] if candidates else {}
+    def from_candidates(field):
+        # first candidate that actually knows the field
+        for c in candidates:
+            if c.get(field):
+                return c[field]
+        return None
+
     isbn_raw = normalize_isbn(ai.get("isbn"))
     prefill = {
-        "title": ai.get("title") or best.get("title"),
-        "subtitle": ai.get("subtitle") or best.get("subtitle"),
+        "title": ai.get("title") or from_candidates("title"),
+        "subtitle": ai.get("subtitle") or from_candidates("subtitle"),
         "authors": [
             {"name": a.get("name"), "role": a.get("role") or "author"}
             for a in (ai.get("authors") or []) if a.get("name")
-        ] or [{"name": n, "role": "author"} for n in best.get("authors", [])],
-        "publisher": ai.get("publisher") or best.get("publisher"),
-        "published_year": ai.get("published_year") or best.get("published_year"),
-        "language": ai.get("language") or best.get("language"),
+        ] or [{"name": n, "role": "author"} for n in (from_candidates("authors") or [])],
+        "publisher": ai.get("publisher") or from_candidates("publisher"),
+        "published_year": ai.get("published_year") or from_candidates("published_year"),
+        "language": ai.get("language") or from_candidates("language"),
         "edition": ai.get("edition"),
-        "isbn": (isbn_raw if isbn_raw and len(isbn_raw) == 10 else None) or best.get("isbn"),
-        "isbn13": (isbn_raw if isbn_raw and len(isbn_raw) == 13 else None) or best.get("isbn13"),
-        "pages": best.get("pages"),
-        "description": best.get("description"),
-        "cover_image_url": cover_url or best.get("cover_image_url"),
+        "isbn": (isbn_raw if isbn_raw and len(isbn_raw) == 10 else None) or from_candidates("isbn"),
+        "isbn13": (isbn_raw if isbn_raw and len(isbn_raw) == 13 else None) or from_candidates("isbn13"),
+        "pages": from_candidates("pages"),
+        "description": from_candidates("description"),
+        "cover_image_url": cover_url or from_candidates("cover_image_url"),
         "ai_confidence": ai.get("confidence"),
     }
     if ai.get("series"):
         prefill["notes"] = f"Series: {ai['series']}"
+    return prefill
+
+
+def apply_enrichment(prefill: dict, enriched: dict) -> dict:
+    """Web-search enrichment fills only fields that are still empty."""
+    for k in ("publisher", "published_year", "pages", "isbn", "isbn13",
+              "edition", "description", "subtitle", "language"):
+        if not prefill.get(k) and enriched.get(k):
+            prefill[k] = enriched[k]
     return prefill

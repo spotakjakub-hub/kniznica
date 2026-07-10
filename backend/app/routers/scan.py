@@ -47,6 +47,14 @@ async def identify_book(
         candidates = lookup.by_title_author(ai["title"], first_author)
 
     prefill = lookup.merge_prefill(ai, candidates, cover_url)
+
+    # best-effort web-search enrichment for whatever is still missing
+    # (no-op on the free Gemini tier, activates automatically with billing)
+    if any(not prefill.get(k) for k in ("publisher", "published_year", "pages", "isbn13")):
+        enriched = gemini.web_enrich(ai)
+        if enriched:
+            prefill = lookup.apply_enrichment(prefill, enriched)
+
     return {"prefill": prefill, "ai": ai, "candidates": candidates}
 
 

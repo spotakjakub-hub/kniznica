@@ -119,3 +119,61 @@ def identify(images: List[Tuple[bytes, str]]) -> dict:
             continue
 
     raise GeminiError(f"All Gemini models failed; last error: {last_err}")
+
+
+ENRICH_PROMPT = """Search the web for the exact bibliographic record of this book \
+(publisher catalog pages, WorldCat, Google Books, library catalogs):
+
+{book}
+
+Return ONLY a JSON object (no markdown, no commentary) with these keys, using null \
+when the web sources don't confirm a value — never guess: \
+publisher, published_year (integer), pages (integer), isbn (10 chars), \
+isbn13 (13 digits), edition, subtitle, language (ISO 639-1), \
+description (1-2 neutral sentences about the book)."""
+
+# flips to False after the first quota rejection so we don't retry every request
+_grounding_available = True
+
+
+def web_enrich(meta: dict) -> dict:
+    """Optional Google-Search-grounded enrichment. Returns {} whenever grounding
+    is unavailable (free tier) or anything fails — callers treat it as best-effort."""
+    global _grounding_available
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key or not _grounding_available or not meta.get("title"):
+        return {}
+
+    desc = f"Title: {meta['title']}"
+    authors = ", ".join(a.get("name", "") for a in meta.get("authors") or [])
+    if authors:
+        desc += f"\nAuthors: {authors}"
+    for label, key in (("Publisher", "publisher"), ("Year", "published_year"), ("Edition", "edition")):
+        if meta.get(key):
+            desc += f"\n{label}: {meta[key]}"
+
+    body = {
+        "contents": [{"parts": [{"text": ENRICH_PROMPT.format(book=desc)}]}],
+        "tools": [{"google_search": {}}],
+    }
+    for model in _models():
+        payload = json.loads(json.dumps(body))
+        if "2.0" not in model:
+            payload["generationConfig"] = {"thinkingConfig": {"thinkingBudget": 0}}
+        try:
+            r = httpx.post(f"{API_BASE}/{model}:generateContent",
+                           headers={"x-goog-api-key": api_key}, json=payload, timeout=60)
+        except httpx.HTTPError:
+            continue
+        if r.status_code == 429:
+            _grounding_available = False  # free tier: no grounding quota
+            return {}
+        if r.status_code != 200:
+            continue
+        try:
+            text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
+            text = text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+            return json.loads(text)
+        except Exception:
+            continue
+    return {}
